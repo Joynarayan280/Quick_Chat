@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from 'react'
+import React, { useContext, useEffect, useState, useRef } from 'react'
 import assets from '../assets/assets'
 import { useNavigate } from 'react-router-dom'
 import { ChatContext } from '../../context/ChatContext'
@@ -11,6 +11,8 @@ const Sidebar = () => {
   const { logout, onlineUsers } = useContext(AuthContext);
 
   const [input, setInput] = useState("");
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef(null);
 
   const filteredUsers = input
     ? users.filter((user) => user.fullName.toLowerCase().includes(input.toLowerCase()))
@@ -19,6 +21,20 @@ const Sidebar = () => {
   useEffect(() => {
     getUsers();
   }, [onlineUsers]);
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (menuRef.current && !menuRef.current.contains(e.target)) {
+        setMenuOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("touchstart", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("touchstart", handleClickOutside);
+    };
+  }, []);
 
   return (
     <div
@@ -31,15 +47,38 @@ const Sidebar = () => {
         <div className="flex justify-between items-center">
           <img src={assets.logo} alt="logo" className="max-w-40" />
 
-          <div className="relative py-2 group">
-            <img src={assets.menu_icon} alt="" className="max-h-5 cursor-pointer" />
+          <div className="relative py-2" ref={menuRef}>
+            <img
+              src={assets.menu_icon}
+              alt=""
+              onClick={() => setMenuOpen((prev) => !prev)}
+              className="max-h-5 cursor-pointer"
+            />
 
-            <div className="absolute top-full right-0 z-20 w-32 p-4 rounded-md bg-[#282142] border border-gray-600 text-gray-100 hidden group-hover:block">
-              <p onClick={() => navigate('/profile')} className="cursor-pointer text-sm">
+            <div
+              className={`absolute top-full right-0 z-20 w-32 p-4 rounded-md bg-[#282142] border border-gray-600 text-gray-100 ${
+                menuOpen ? "block" : "hidden"
+              }`}
+            >
+              <p
+                onClick={() => {
+                  setMenuOpen(false);
+                  navigate('/profile');
+                }}
+                className="cursor-pointer text-sm"
+              >
                 Edit Profile
               </p>
               <hr className="my-2 border-gray-500" />
-              <p onClick={logout} className="cursor-pointer text-sm">Logout</p>
+              <p
+                onClick={() => {
+                  setMenuOpen(false);
+                  logout();
+                }}
+                className="cursor-pointer text-sm"
+              >
+                Logout
+              </p>
             </div>
           </div>
         </div>
